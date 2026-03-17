@@ -167,7 +167,7 @@ class Twitch(object):
             else:
                 raise StreamerIsOfflineException
 
-def get_stream_info(self, streamer):
+    def get_stream_info(self, streamer):
     """
     Pobiera informacje o streamie dla danego streamera.
     Zabezpiecza przed KeyError, loguje online/offline.
