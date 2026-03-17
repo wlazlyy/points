@@ -167,16 +167,29 @@ class Twitch(object):
             else:
                 raise StreamerIsOfflineException
 
-    def get_stream_info(self, streamer):
-        json_data = copy.deepcopy(
-            GQLOperations.VideoPlayerStreamInfoOverlayChannel)
-        json_data["variables"] = {"channel": streamer.username}
-        response = self.post_gql_request(json_data)
-        if response != {}:
-            if response["data"]["user"]["stream"] is None:
-                raise StreamerIsOfflineException
-            else:
-                return response["data"]["user"]
+def get_stream_info(self, streamer):
+    """
+    Pobiera informacje o streamie dla danego streamera.
+    Zabezpiecza przed KeyError, loguje online/offline.
+    """
+    url = f"{self.base_url}/streams?user_login={streamer}"
+    try:
+        response = requests.get(url, headers=self.headers).json()
+    except Exception as e:
+        print(f"⚠️ Błąd pobierania danych dla {streamer}: {e}")
+        return None
+
+    # response.get("data") zwraca listę aktywnych streamów
+    stream_data = response.get("data", [])
+    if not stream_data:
+        # brak aktywnego streama lub nieistniejący streamer
+        print(f"Streamer {streamer} jest offline lub nie istnieje")
+        return None
+
+    # streamer online → zwracamy pierwszy aktywny stream
+    stream_info = stream_data[0]
+    print(f"🔥 Streamer {streamer} jest online! Tytuł: {stream_info.get('title')}, widzowie: {stream_info.get('viewer_count')}")
+    return stream_info
 
     def check_streamer_online(self, streamer):
         if time.time() < streamer.offline_at + 60:
